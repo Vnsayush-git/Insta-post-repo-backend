@@ -223,7 +223,16 @@ export async function searchImagesController(req, res) {
     } = { ...req.query, ...req.body };
 
     const searchOptions = {};
-    if (safeSearch !== undefined) searchOptions.safeSearch = Number(safeSearch);
+    if (safeSearch !== undefined) {
+      const parsedSafe = Number(safeSearch);
+      if (parsedSafe === 1 || parsedSafe === 0 || safeSearch === "strict" || safeSearch === "true" || safeSearch === true) {
+        searchOptions.safeSearch = 0; // STRICT
+      } else if (parsedSafe === -1 || safeSearch === "moderate") {
+        searchOptions.safeSearch = -1; // MODERATE
+      } else if (parsedSafe === -2 || safeSearch === "off" || safeSearch === "false" || safeSearch === false) {
+        searchOptions.safeSearch = -2; // OFF
+      }
+    }
     if (locale) searchOptions.locale = locale;
     if (offset !== undefined) searchOptions.offset = Number(offset);
     if (size) searchOptions.size = size;
