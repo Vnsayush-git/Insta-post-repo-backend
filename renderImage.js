@@ -19,10 +19,13 @@ export async function renderImage(design = {}) {
   });
 
   const layers = [];
-
   for (const el of elements) {
     if (el.type === "image") {
-      const buffer = fs.readFileSync(el.src);
+      const buffer = Buffer.isBuffer(el.src)
+        ? el.src
+        : Buffer.isBuffer(el.buffer)
+        ? el.buffer
+        : fs.readFileSync(el.src);
 
       const resized = await sharp(buffer)
         .resize(el.width, el.height)

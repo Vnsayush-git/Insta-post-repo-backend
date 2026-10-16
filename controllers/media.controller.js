@@ -48,6 +48,8 @@ export async function exportDesign(req, res) {
       return res.status(400).json({ error: "Image required" });
     }
 
+    const imageSource = req.file.buffer || req.file.path;
+
     // Build design object manually
     const design = {
       width: 3840,
@@ -56,7 +58,7 @@ export async function exportDesign(req, res) {
       elements: [
         {
           type: "image",
-          src: req.file.path,
+          src: imageSource,
           x: 0,
           y: 0,
           width: 3840,
@@ -84,8 +86,10 @@ export async function exportDesign(req, res) {
 
     const buffer = await renderImage(design);
 
-    if (fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+    if (req.file.path && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (_) {}
     }
 
     res.setHeader("Content-Type", "image/png");
@@ -119,14 +123,17 @@ export async function extractText(req, res) {
 
     worker = await createWorker("eng");
 
+    const imageInput = req.file.buffer || req.file.path;
     const {
       data: { text },
-    } = await worker.recognize(req.file.path);
+    } = await worker.recognize(imageInput);
 
     await worker.terminate();
 
-    if (fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+    if (req.file.path && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (_) {}
     }
 
     res.json({ success: true, text: text.trim() });
